@@ -1,0 +1,9 @@
+# tasks/playbook_install_pip_packages.yaml
+# Author: Micah Bronfman
+# Purpose: Install pip packages on Cloud VMs
+
+- name: "Install necessary pip packages"
+  pip:
+    name:
+      - kafka-python     # Kafka client library for Python
+    state: present

@@ -1,0 +1,55 @@
+---
+# tasks/playbook_check_variables.yaml
+# Author: Micah Bronfman
+# CS4287/5287 Principles of Cloud Computing
+# Purpose: Check if all necessary variables are defined, and exit if they are missing
+
+- name: Ensure local_user is defined
+  fail:
+    msg: "The local_user variable is not defined. Please set it in variables.yaml"
+  when: local_user is not defined
+
+- name: Ensure cloud_user is defined
+  fail:
+    msg: "The cloud_user variable is not defined. Please set it in variables.yaml"
+  when: cloud_user is not defined
+
+- name: Ensure vm_prefix is defined
+  fail:
+    msg: "The vm_prefix variable is not defined. Please set it in variables.yaml"
+  when: vm_prefix is not defined
+
+- name: Ensure vm_flavor is defined
+  fail:
+    msg: "The vm_flavor variable is not defined. Please set it in variables.yaml"
+  when: vm_flavor is not defined
+
+- name: Ensure vm_image is defined
+  fail:
+    msg: "The vm_image variable is not defined. Please set it in variables.yaml"
+  when: vm_image is not defined
+
+- name: Ensure project_id is defined
+  fail:
+    msg: "The project_id variable is not defined. Please set it in variables.yaml"
+  when: project_id is not defined
+
+- name: Ensure kafka_port is defined
+  fail:
+    msg: "The kafka_port variable is not defined. Please set it in variables.yaml"
+  when: kafka_port is not defined
+
+- name: Ensure zookeeper_port is defined
+  fail:
+    msg: "The zookeeper_port variable is not defined. Please set it in variables.yaml"
+  when: zookeeper_port is not defined
+
+- name: Ensure docker_ports is defined
+  fail:
+    msg: "The docker_ports variable is not defined. Please set it in variables.yaml"
+  when: docker_ports is not defined
+
+- name: Ensure num_producers is defined
+  fail:
+    msg: "The num_producers variable is not defined. Please set it in variables.yaml"
+  when: num_producers is not defined

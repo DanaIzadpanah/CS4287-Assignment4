@@ -1,0 +1,18 @@
+# playbook_disable_swap.yaml
+
+- name: Turn off swap
+  command: swapoff -a
+
+- name: Remove swap entry from /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^\s*\/swap.img'
+    state: absent
+
+- name: Verify swap is disabled
+  shell: free -h | grep -i swap
+  register: swap_status
+
+- name: Display swap status
+  debug:
+    msg: "Swap is disabled: {{ swap_status.stdout }}"

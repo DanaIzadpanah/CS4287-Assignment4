@@ -1,0 +1,5 @@
+- name: Update config.toml for private registry mirror
+  lineinfile:
+    path: /etc/containerd/config.toml
+    insertafter: '^\[plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors\]'
+    line: 'endpoint = ["http://localhost:5000"]'

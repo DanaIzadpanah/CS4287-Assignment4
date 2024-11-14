@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: consumer
+spec:
+  template:
+    spec:
+      containers:
+      - name: consumer
+        image: your_private_registry/consumer:latest
+        env:
+          - name: KAFKA_BROKER
+            value: "kafka-service:9092"
+          - name: TOPIC_NAME
+            value: "iot-data"
+          - name: MONGODB_HOST
+            value: "mongodb-service"
+          - name: MONGODB_PORT
+            value: "27017"
+        command: ["python", "consumer.py"]
+      restartPolicy: Never
+  backoffLimit: 4

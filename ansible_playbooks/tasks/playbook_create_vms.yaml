@@ -1,0 +1,32 @@
+---
+# tasks/playbook_create_vms.yaml
+# Author: Micah Bronfman
+# Purpose: Create VMs on Chameleon Cloud using OpenStack
+- name: "Create Security Group with SSH and Internal Traffic Rules"
+  openstack.cloud.security_group_rule:
+    security_group: default
+    protocol: tcp
+    port_range_min: 22
+    port_range_max: 22
+    remote_ip_prefix: "0.0.0.0/0" 
+    direction: ingress
+    ether_type: IPv4
+
+- name: "Create VMs on Chameleon Cloud"
+  openstack.cloud.server:
+    cloud: "{{ cloud_name }}"
+    name: "{{ vm_prefix }}-{{ item }}"
+    image: "{{ vm_image }}"
+    flavor: "{{ vm_flavor }}"
+    network: "{{ vm_network }}"
+    key_name: "{{ vm_key }}"
+    security_groups:
+      - default
+    auto_ip: false
+    state: present
+  loop: "{{ range(1, 5) | list }}"
+  register: vm_info
+
+
+
+

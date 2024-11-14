@@ -1,0 +1,15 @@
+# tasks/playbook_download_kafka.yaml
+# Author: Micah Bronfman
+# Purpose: Download Kafka on the local controller machine
+
+- name: "Create a directory for Kafka"
+  file:
+    path: /tmp/kafka
+    state: directory
+    mode: '0755'
+
+- name: "Download Kafka archive"
+  get_url:
+    url: "https://downloads.apache.org/kafka/3.8.0/kafka_2.13-3.8.0.tgz"
+    dest: /tmp/kafka/kafka_2.13-3.8.0.tgz
+    mode: '0644'

@@ -1,0 +1,43 @@
+---
+# tasks/playbook_install_docker.yaml
+# Author: Micah Bronfman
+# Purpose: Install Docker on Cloud VMs
+
+- name: "Update apt and install prerequisites"
+  shell: |
+    apt update
+    apt install -y apt-transport-https ca-certificates curl software-properties-common
+
+- name: "Add Docker GPG key"
+  shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+
+- name: "Add Docker repository"
+  shell: |
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" -y
+
+- name: "Install Docker"
+  shell: |
+    apt update
+    apt-cache policy docker-ce
+    apt install -y docker-ce
+
+- name: "Ensure Docker is running"
+  shell: |
+    systemctl enable docker
+    systemctl start docker
+
+- name: "Add cloud user to Docker group"
+  user:
+    name: "{{ cloud_user }}"
+    groups: docker
+    append: yes
+
+- name: "Verify Docker installation"
+  command: docker --version
+  register: docker_version
+
+- name: "Display Docker version"
+  debug:
+    msg: "Docker version installed: {{ docker_version.stdout }}"
+

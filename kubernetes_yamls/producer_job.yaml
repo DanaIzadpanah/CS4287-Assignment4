@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: producer
+spec:
+  template:
+    spec:
+      containers:
+      - name: producer
+        image: your_private_registry/producer:latest
+        env:
+          - name: KAFKA_BROKER
+            value: "kafka-service:9092"
+          - name: TOPIC_NAME
+            value: "iot-data" # Replace with your actual topic name
+        command: ["python", "producer.py"] # Assuming `producer.py` is the main script
+      restartPolicy: Never
+  backoffLimit: 4

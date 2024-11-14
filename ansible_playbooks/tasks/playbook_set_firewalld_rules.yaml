@@ -1,0 +1,45 @@
+- name: "Start and enable firewalld"
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: "Open SSH port"
+  ansible.builtin.firewalld:
+    port: 22/tcp
+    permanent: true
+    state: enabled
+    immediate: yes
+
+- name: "Allow Kafka traffic on port 9092"
+  ansible.builtin.firewalld:
+    port: 9092/tcp
+    permanent: true
+    state: enabled
+    immediate: yes
+
+- name: "Allow Zookeeper traffic on port 2181"
+  ansible.builtin.firewalld:
+    port: 2181/tcp
+    permanent: true
+    state: enabled
+    immediate: yes
+
+- name: "Allow Docker container traffic"
+  ansible.builtin.firewalld:
+    port: 2375/tcp
+    permanent: true
+    state: enabled
+    immediate: yes
+
+- name: "Allow intra-cluster communication"
+  ansible.builtin.firewalld:
+    rich_rule: 'rule family="ipv4" source address="10.0.0.0/8" accept'
+    permanent: true
+    state: enabled
+    immediate: yes
+
+- name: "Reload firewalld to apply changes"
+  ansible.builtin.service:
+    name: firewalld
+    state: reloaded

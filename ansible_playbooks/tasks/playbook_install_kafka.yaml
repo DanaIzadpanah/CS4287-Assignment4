@@ -1,0 +1,54 @@
+
+
+- name: Create Kafka directory under /opt
+  file:
+    path: "{{ kafka_install_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Download Kafka tarball
+  get_url:
+    url: "https://downloads.apache.org/kafka/{{ kafka_version }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz"
+    dest: "{{ kafka_install_dir }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz"
+    mode: '0644'
+
+- name: Extract Kafka archive
+  unarchive:
+    src: "{{ kafka_install_dir }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz"
+    dest: "{{ kafka_install_dir }}/"
+    remote_src: yes
+
+- name: Create Kafka environment variables script
+  copy:
+    dest: /etc/profile.d/kafka.sh
+    content: |
+      export KAFKA_HOME={{ kafka_home }}
+      export PATH=$PATH:$KAFKA_HOME/bin
+    mode: '0755'
+
+- name: Create Kafka data directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ kafka_install_dir }}/kafka-logs"
+    - "{{ kafka_install_dir }}/zookeeper-data"
+
+- name: Set permissions for Kafka directories
+  file:
+    path: "{{ kafka_install_dir }}"
+    owner: "{{ kafka_user }}"
+    group: "{{ kafka_user }}"
+    recurse: yes
+
+- name: Verify Kafka installation
+  command: kafka-topics.sh --version
+  register: kafka_version_output
+  environment:
+    KAFKA_HOME: "{{ kafka_home }}"
+    PATH: "{{ ansible_env.PATH }}:{{ kafka_home }}/bin"
+
+- name: Display Kafka version
+  debug:
+    msg: "Kafka version installed: {{ kafka_version_output.stdout }}"

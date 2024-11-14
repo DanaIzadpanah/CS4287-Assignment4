@@ -1,0 +1,17 @@
+# tasks/playbook_docker_master.yaml
+
+- name: Run private Docker registry container on master
+  docker_container:
+    name: registry
+    image: registry:2
+    state: started
+    ports:
+      - "5000:5000"
+
+- name: Ensure Docker registry is running on master
+  command: docker ps
+  register: docker_registry_status
+
+- name: Display Docker registry status
+  debug:
+    msg: "Docker registry running: {{ docker_registry_status.stdout }}"

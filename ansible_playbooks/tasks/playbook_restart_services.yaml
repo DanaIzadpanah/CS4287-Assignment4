@@ -1,0 +1,27 @@
+# playbook_restart_services.yaml
+
+- name: Restart containerd service
+  service:
+    name: containerd
+    state: restarted
+
+- name: Restart Docker service
+  service:
+    name: docker
+    state: restarted
+
+- name: Check containerd status
+  command: systemctl is-active containerd
+  register: containerd_status
+
+- name: Display containerd status
+  debug:
+    msg: "containerd service is {{ containerd_status.stdout }}"
+
+- name: Check Docker status
+  command: systemctl is-active docker
+  register: docker_status
+
+- name: Display Docker status
+  debug:
+    msg: "Docker service is {{ docker_status.stdout }}"

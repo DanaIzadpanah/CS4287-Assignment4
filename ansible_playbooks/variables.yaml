@@ -1,0 +1,45 @@
+---
+#
+# Author: Aniruddha Gokhale
+# CS4287/5287 Principles of Cloud Computing
+# Created: Fall 2024
+#
+# Purpose: 
+#    This yaml file declares the different variables. It uses
+#    a Python dictionary syntax
+#
+
+# I have already defined these two variables, which are used
+# in the master playbook.
+# @@ make sure to add the local user's username @@
+local_user: micahbronfman
+
+cloud_user: cc  # user on chameleon VMs is cc
+cloud_name: "CH-822922"
+
+vm_prefix: "Team19VM"  # Prefix for naming VMs
+vm_flavor: "m1.medium"  # VM size
+vm_image: "CC-Ubuntu20.04"  # VM image
+vm_network: "CH-822922-net"
+vm_key: "Team19VM1Key"
+project_id: "ProgrammingAssignment2"
+
+kafka_version: 3.8.0
+kafka_scala_version: 2.13
+kafka_install_dir: /opt/kafka
+kafka_home: "/opt/kafka/kafka_{{ kafka_scala_version }}-{{ kafka_version }}"
+kafka_user: "{{ ansible_user }}"
+
+# @@ You have to add additional variables here that you need
+#    in the different children playbooks. This could be things
+#    like VM properties such as VM name prefix, the flavor like
+#    m1.medium, project number and all the things you need to
+#    create the VM.
+# @@
+
+kafka_port: 9092  
+zookeeper_port: 2181  
+docker_ports: [80, 443]
+
+num_producers: 4
+...
