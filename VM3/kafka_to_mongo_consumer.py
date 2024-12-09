@@ -1,25 +1,45 @@
 from kafka import KafkaConsumer
 from pymongo import MongoClient
 import json
+import requests
 
-# MongoDB connection setup (ensure this IP is correct)
+# MongoDB connection
 mongo_client = MongoClient("mongodb://192.168.5.206:27017/")
-mongo_db = mongo_client["kafkaDatabase"]  # Database name
-mongo_collection = mongo_db["iot_images_collection"]  # Collection name
+mongo_db = mongo_client["kafkaDatabase"]
+mongo_collection = mongo_db["iot_images_collection"]
+
+
+# Path to MongoDB data
+MONGO_ENTRIES_PATH = "../../data/mongo_data/mongo_entries.json"
+
+# Load data
+with open(MONGO_ENTRIES_PATH, 'r') as f:
+    entries = json.load(f)
+
+# Simulate MongoDB insertion
+for entry in entries:
+    print(f"Inserted into MongoDB: {entry}")
 
 # Kafka consumer setup
 consumer = KafkaConsumer(
-    'iot_images',  # Kafka topic
-    bootstrap_servers=['192.168.5.22:9092'],  # Kafka broker on VM3
+    'iot_images',
+    bootstrap_servers=['192.168.5.22:9092'],
     value_deserializer=lambda x: json.loads(x.decode('utf-8'))
 )
 
-# Consume messages from Kafka and insert into MongoDB
+# Flask inference server
+INFERENCE_SERVER_URL = "http://192.168.5.207:5000/"
+
 for message in consumer:
-    print(f"Consumed message: {message.value}")  # Debug message to confirm
-    
-    try:
-        mongo_collection.insert_one(message.value)  # Insert into MongoDB
-        print(f"Inserted into MongoDB: {message.value}")
-    except Exception as e:
-        print(f"Error inserting into MongoDB: {e}")  # Catch any insertion error
+    data = message.value
+
+    # Perform inference
+    response = requests.post(INFERENCE_SERVER_URL, json={"image": data["Data"]})
+    if response.status_code == 200:
+        data["Inferred"] = response.json().get("inferred")
+    else:
+        data["Inferred"] = "error"
+
+    # Insert into MongoDB
+    mongo_collection.insert_one(data)
+    print(f"Inserted into MongoDB: {data}")

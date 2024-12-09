@@ -1,5 +1,13 @@
-FROM python:3.8-slim
+FROM python:3.9-slim
+
+# Install dependencies
+RUN pip install kafka-python tensorflow opencv-python-headless
+
+# Copy the producer script
+COPY iot_producer.py /app/iot_producer.py
+
+# Set the working directory
 WORKDIR /app
-COPY producer.py /app/
-RUN pip install kafka-python
-CMD ["python", "producer.py"]
+
+# Run the producer script
+CMD ["python", "iot_producer.py"]

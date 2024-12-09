@@ -1,0 +1,26 @@
+[
+    {
+        "ID": 1,
+        "GroundTruth": "cat",
+        "Data": "base64_encoded_image_data_1",
+        "ProducerID": "producer1"
+    },
+    {
+        "ID": 2,
+        "GroundTruth": "dog",
+        "Data": "base64_encoded_image_data_2",
+        "ProducerID": "producer1"
+    },
+    {
+        "ID": 3,
+        "GroundTruth": "frog",
+        "Data": "base64_encoded_image_data_3",
+        "ProducerID": "producer2"
+    },
+    {
+        "ID": 4,
+        "GroundTruth": "bird",
+        "Data": "base64_encoded_image_data_4",
+        "ProducerID": "producer2"
+    }
+]

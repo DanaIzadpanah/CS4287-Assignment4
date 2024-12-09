@@ -1,0 +1,26 @@
+[
+    {
+        "ID": 1,
+        "GroundTruth": "cat",
+        "Inferred": "dog",
+        "ProducerID": "producer1"
+    },
+    {
+        "ID": 2,
+        "GroundTruth": "dog",
+        "Inferred": "dog",
+        "ProducerID": "producer1"
+    },
+    {
+        "ID": 3,
+        "GroundTruth": "frog",
+        "Inferred": "frog",
+        "ProducerID": "producer2"
+    },
+    {
+        "ID": 4,
+        "GroundTruth": "bird",
+        "Inferred": "cat",
+        "ProducerID": "producer2"
+    }
+]
