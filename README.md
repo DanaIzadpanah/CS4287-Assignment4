@@ -1,122 +1,131 @@
-# CS4287-Assignment3: IoT Data Analytics Pipeline with Kubernetes and Latency Analysis
+CS4287-Assignment4: IoT Data Analytics with Apache Spark Batch Processing
 
-## Overview
-This project builds upon Assignments 1 and 2, where we previously implemented a cloud-based IoT data analytics pipeline using Infrastructure-as-Code (IaC) with Ansible and containerized components using Docker. In Assignment 3, we transition the pipeline to a Kubernetes-based deployment, enabling greater scalability and management. We also perform latency analysis to evaluate the system’s performance under varying workloads.
+Overview
 
-## Technologies Used
-- **Ansible**: For automating the provisioning and setup of VMs and Kubernetes on Chameleon Cloud.
-- **Apache Kafka**: For streaming and managing the message queue between the IoT producers and consumers.
-- **MongoDB**: Used for storing processed image data along with metadata.
-- **Python**: Main programming language, including libraries like `kafka-python`, `pymongo`, and `Flask` for different components.
-- **Flask**: Hosting the machine learning inference model (ResNet50).
-- **TensorFlow**: Used for loading the pre-trained ResNet50 ML model.
-- **Docker**: Containerized deployment for components such as Kafka, MongoDB, and the ML server.
-- **Kubernetes**: Orchestrates containers for scalability and resilience in a cloud environment.
-- **Chameleon Cloud**: Cloud platform where we deployed four virtual machines to distribute the different components of the pipeline.
+This project builds upon Assignment 3 by adding batch processing capabilities using Apache Spark. The primary goal is to analyze IoT inference data stored in MongoDB and calculate the number of errors made by the inference server for each producer using the MapReduce approach. The project integrates Spark-based batch processing into the existing Kubernetes-deployed pipeline, enabling efficient analysis of large-scale data.
 
-## Project Architecture
-The project is divided across four VMs, each hosting a containerized component of the system, with Kubernetes managing deployment:
+Technologies Used
+	•	Apache Kafka: Streams and manages the message queue between IoT producers and consumers.
+	•	Apache Spark: Performs batch processing and MapReduce error analysis.
+	•	MongoDB: Stores processed image data and metadata for analysis.
+	•	Python: Main programming language, using libraries like PySpark, kafka-python, pymongo, and Flask.
+	•	Flask: Hosts the machine learning inference model (ResNet50).
+	•	TensorFlow: Used for loading the pre-trained ResNet50 ML model.
+	•	Docker: Containerized deployment for Kafka, MongoDB, and the ML server.
+	•	Kubernetes: Manages container orchestration for scalability and reliability.
+	•	Chameleon Cloud: Cloud platform for provisioning virtual machines.
 
-- **VM1**: IoT Producer
-- **VM2**: ML Model (ResNet50) Inference Server
-- **VM3**: Kafka Broker & Consumers
-- **VM4**: MongoDB Database
+Project Architecture
 
-### VM1: IoT Producer
-- **Role**: Simulates IoT camera devices sending images to Kafka.
-- **Details**:
-  - The Producer generates synthetic image data and sends it to Kafka, along with a timestamp for latency measurement.
-  - It uses the `kafka-python` library to connect to Kafka.
+The pipeline includes four virtual machines (VMs), with Apache Spark integrated for batch processing:
+	•	VM1: IoT Producer
+	•	VM2: ML Model (ResNet50) Inference Server
+	•	VM3: Kafka Broker & Consumers
+	•	VM4: MongoDB and Apache Spark
 
-### VM2: ML Inference Server
-- **Role**: Hosts the ResNet50 model using Flask to perform real-time image inference.
-- **Details**:
-  - Flask API exposes an endpoint to accept base64-encoded image data and returns a classification label.
-  - The ML model uses TensorFlow’s ResNet50 pre-trained model.
+VM1: IoT Producer
+	•	Role: Generates synthetic image data with GroundTruth labels and sends it to Kafka.
+	•	Details:
+	•	The producer uses kafka-python to send messages to Kafka, including metadata like GroundTruth, ProducerID, and the image data encoded in base64.
 
-### VM3: Kafka Broker & Consumers
-- **Role**: Hosts the Kafka broker, which manages the data pipeline between the IoT producer and the consumers.
-- **Details**:
-  - Kafka Broker runs within a Kubernetes-managed container.
-  - **Consumers**:
-    - **DB Consumer**: Consumes image data and stores it in MongoDB (hosted on VM4).
-    - **Inference Consumer**: Sends image data to the Flask API hosted on VM2 for inference and updates MongoDB with the predicted label.
+VM2: ML Inference Server
+	•	Role: Processes images in real time using the ResNet50 model hosted on Flask.
+	•	Details:
+	•	Accepts base64-encoded image data from the Kafka consumer and returns the Inferred label.
 
-### VM4: MongoDB Database
-- **Role**: Stores all incoming data from Kafka, including image metadata and inference results.
-- **Details**:
-  - MongoDB runs within a Kubernetes-managed container.
-  - The DB Consumer inserts image metadata, and the Inference Consumer updates MongoDB with inference results.
+VM3: Kafka Broker & Consumers
+	•	Role: Handles message distribution between the producer and consumers.
+	•	Details:
+	•	Kafka Broker: Routes messages to consumers.
+	•	DB Consumer: Stores image metadata and inference results in MongoDB.
+	•	Inference Consumer: Sends images to the Flask server for inference and updates MongoDB with the results.
 
-## Installation & Setup
+VM4: MongoDB and Apache Spark
+	•	Role: Stores data for batch processing and executes Spark MapReduce jobs.
+	•	Details:
+	•	MongoDB stores GroundTruth, Inferred labels, and ProducerID for each message.
+	•	Apache Spark performs batch processing to calculate errors per producer.
 
-### Prerequisites
-- Ensure you have a Chameleon Cloud account and have created 4 VMs (VM1-VM4) using Ubuntu 22.04.
-- Install Docker, Ansible, and Python 3 on each VM.
-- Kubernetes must be configured on the VMs, with `kubectl` access from the control node.
+Installation & Setup
 
-### Step-by-Step Setup
+Prerequisites
+	•	Set up 4 VMs (VM1-VM4) on Chameleon Cloud with Ubuntu 22.04.
+	•	Install Docker, Kubernetes, Python 3, and Apache Spark on the respective VMs.
+	•	Configure Kubernetes with kubectl access from the control node.
 
-#### Ansible Playbooks
-1. Run the Ansible playbooks located in `ansible_playbooks/` to provision the VMs and install Kubernetes.
-    ```bash
-    ansible-playbook playbook_master_test.yaml
-    ```
+Step-by-Step Setup
 
-#### Kubernetes Deployment
-1. Use the Kubernetes YAML files in `kubernetes_yamls/` to deploy each component:
-    ```bash
-    kubectl apply -f kubernetes_yamls/kafka_deployment.yaml
-    kubectl apply -f kubernetes_yamls/mongo_deployment.yaml
-    kubectl apply -f kubernetes_yamls/ml_inference_deployment.yaml
-    kubectl apply -f kubernetes_yamls/producer_job.yaml
-    kubectl apply -f kubernetes_yamls/consumer_job.yaml
-    ```
+Ansible Playbooks
+	1.	Run the Ansible playbooks to provision the VMs and install necessary components:
+ansible-playbook playbook_master_test.yaml
 
-#### Confirm Component Status
-1. Verify that all components are running in Kubernetes:
-    ```bash
-    kubectl get pods
-    ```
-
-## How the System Works
-1. **IoT Producer (VM1)** generates synthetic image data with timestamps and sends it to the Kafka broker (VM3).
-2. **Kafka Broker (VM3)** distributes messages to two consumers: the DB Consumer and the Inference Consumer.
-3. **DB Consumer (VM3)** inserts image metadata into MongoDB (VM4).
-4. **Inference Consumer (VM3)** sends the image to the ML Inference Server (VM2) for classification, then updates MongoDB with the predicted label.
-5. The system uses timestamped messages to measure end-to-end latency, allowing analysis of performance under different loads.
-
-## Latency Analysis
-
-### Generating Latency Data
-- The `consumer.py` script records the latency of each message by comparing timestamps and outputs the data to `results/latency_data.csv`.
-
-### Generating CDF Plot
-- Run `generate_cdf_plot.py` (in `results/`) to produce a CDF plot of the latency data:
-    ```bash
-    python results/generate_cdf_plot.py
-    ```
-- The plot will be saved as `latency_cdf_plot.png` in the `results/` folder.
-
-## Project Structure
-Assignment3/  
-├── ansible_playbooks/        # Ansible playbooks for VM provisioning and Kubernetes setup  
-├── kubernetes_yamls/         # Kubernetes YAML files for component deployments  
-├── results/                  # Folder for latency data and CDF plot  
-│   ├── latency_data.csv  
-│   ├── latency_cdf_plot.png  
-│   └── generate_cdf_plot.py  
-├── VM1/                      # IoT Producer Dockerfile and code  
-├── VM2/                      # ML Inference Server Dockerfile and code  
-├── VM3/                      # Kafka Broker and Consumers Dockerfile and code  
-├── VM4/                      # MongoDB Dockerfile and code  
-└── README.md                 # This README file  
-
-## Team Contributions
-- **Micah Bronfman**: Led the development of Ansible playbooks, automating the setup and provisioning of VMs, installing essential services (Kafka, Docker, MongoDB), and configuring Kubernetes.
-- **Jonathan Tilahun**: Co-developed the Kubernetes deployments for Kafka, MongoDB, ML Inference Server, Producer, and Consumer. Worked on generating and analyzing latency data, including the CDF plot, to assess system performance.
-- **Dana Izadpanah**: Co-developed the Kubernetes deployments alongside Jonathan for all pipeline components. Contributed to the data analysis pipeline, including latency data collection and visualization for performance evaluation.
+Kubernetes Deployment
+	1.	Deploy all components using the provided Kubernetes YAML files:
+ kubectl apply -f kubernetes_yamls/kafka_deployment.yaml
+kubectl apply -f kubernetes_yamls/mongo_deployment.yaml
+kubectl apply -f kubernetes_yamls/ml_inference_deployment.yaml
+kubectl apply -f kubernetes_yamls/producer_job.yaml
+kubectl apply -f kubernetes_yamls/consumer_job.yaml
 
 
-## Conclusion
-This project demonstrates the use of Kubernetes for orchestrating a cloud-based IoT data analytics pipeline. All components (Producer, Consumer, Kafka, ML Server, and MongoDB) are now deployed in Kubernetes, ensuring scalability and resilience. The end-to-end latency was analyzed, and a CDF plot generated to visualize system performance under varying loads.
+Confirm Component Status
+	1.	Verify that all pods are running in Kubernetes:
+ kubectl get pods
+
+ 
+How the System Works
+	1.	The IoT Producer (VM1) generates synthetic image data with GroundTruth labels and sends it to the Kafka broker (VM3).
+	2.	The Kafka Broker (VM3) routes messages to the DB Consumer and Inference Consumer.
+	3.	The DB Consumer (VM3) stores image metadata in MongoDB (VM4).
+	4.	The Inference Consumer (VM3) sends image data to the Flask server (VM2), retrieves the Inferred label, and updates MongoDB with the result.
+	5.	The Spark Job (VM4) reads data from MongoDB, performs batch processing to calculate inference errors, and outputs the results in a CSV file.
+
+Spark Batch Processing
+
+MapReduce Job
+
+The Apache Spark job calculates errors by comparing the GroundTruth and Inferred labels for each producer:
+	1.	Reads data from MongoDB.
+	2.	Calculates whether each inference is correct or incorrect.
+	3.	Aggregates errors per producer using the MapReduce approach.
+	4.	Outputs the error counts as a CSV file.
+
+Running the Spark Job
+	1.	Navigate to the Spark job directory:
+ cd spark_job/
+ 	2.	Execute the Spark job:
+  spark-submit spark_mapreduce_error_count.py
+
+  
+Output
+
+The results will be saved in a CSV file:
+	•	Location: data/spark_output/error_counts_per_producer.csv
+	•	Sample Output:
+ ProducerID,total_errors
+producer1,2
+producer2,1
+
+Project Structure
+
+Assignment4/
+├── ansible_playbooks/        # Ansible playbooks for setup
+├── kubernetes_yamls/         # Kubernetes YAML files for deployment
+├── data/                     # Data for Spark input/output
+│   ├── mongo_data/           # MongoDB data
+│   ├── spark_output/         # Spark output CSV files
+├── VM1/                      # IoT Producer code and Dockerfile
+├── VM2/                      # ML Inference Server code and Dockerfile
+├── VM3/                      # Kafka Consumers and Dockerfile
+├── VM4/                      # MongoDB and Spark setup
+├── spark_job/                # Spark MapReduce job scripts
+└── README.md                 # This README file
+
+Team Contributions
+	•	Micah Bronfman: Implemented Spark integration with MongoDB and developed the Spark MapReduce job for error analysis. Managed integration with the Kubernetes-deployed pipeline.
+	•	Jonathan Tilahun: Enhanced Kafka consumer scripts to track inference accuracy and set up Spark configurations for batch processing.
+	•	Dana Izadpanah: Assisted with Kubernetes deployments, particularly for scaling MongoDB and Spark. Conducted testing and validation of the Spark output.
+
+Conclusion
+
+This project demonstrates the integration of Apache Spark into the existing IoT pipeline for efficient batch processing and error analysis. The Spark MapReduce job ensures scalable and accurate computation of inference errors across large datasets, enhancing the pipeline’s analytical capabilities.
